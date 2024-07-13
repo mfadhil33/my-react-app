@@ -38,13 +38,15 @@ const ProductsPage = () => {
   };
 
   const handleAddToCart = (id) => {
-    setCart([
-      ...cart,
-      {
-        id,
-        qty: 1,
-      },
-    ]);
+    if (cart.find((item) => item.id === id)) {
+      setCart(
+        cart.map((item) =>
+          item.id === id ? { ...item, qty: item.qty + 1 } : item
+        )
+      );
+    } else {
+      setCart([...cart, { id, qty: 1 }]);
+    }
   };
 
   const email = localStorage.getItem("email");
@@ -57,7 +59,7 @@ const ProductsPage = () => {
         </Button>
       </div>
 
-      <div className="flex justify-center py-5">
+      <div className="flex justify-center py-4">
         <div className="w-3/4 flex flex-wrap">
           {products.map((product) => (
             <CardProduct key={product.id}>
@@ -74,7 +76,7 @@ const ProductsPage = () => {
           ))}
         </div>
         <div className="2-1/4">
-          <h1 className="text-3xl font-bold text-blue-600">Cart</h1>
+          <h1 className="text-3xl font-bold text-blue-600 ml-5 mb-2">Cart</h1>
 
           <table className="text-left table-auto border-separate border-spacing-x-5">
             <thead>
@@ -93,7 +95,7 @@ const ProductsPage = () => {
                 if (!product) return null; // Tambahkan pengecekan ini
                 return (
                   <tr key={item.id}>
-                    <td>Hello</td>
+                    <td>{product.name}</td>
                     <td>
                       Rp{" "}
                       {product.price.toLocaleString("id-ID", {
