@@ -1,11 +1,24 @@
 import React from "react";
-import Button from "../Elements/Button";
+
 class Counter extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       count: 0,
     };
+  }
+
+  componentDidMount() {
+    this.setState({ count: 10 });
+    console.log("component did mount");
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    console.log("componentDidUpdate");
+
+    if (this.state.count === 10) {
+      this.setState({ count: 0 });
+    }
   }
   render() {
     return (

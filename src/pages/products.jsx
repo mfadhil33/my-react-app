@@ -1,7 +1,6 @@
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import CardProduct from "../components/Fragments/CardProduct";
 import Button from "../components/Elements/Button";
-import Counter from "../components/Fragments/Counter";
 
 const getProducts = () => [
   {
@@ -24,32 +23,50 @@ const getProducts = () => [
 const ProductsPage = () => {
   const products = getProducts();
 
-  const [cart, setCart] = useState([
-    {
-      id: "1",
-      qty: 1,
-      image: "/images/fashion-shoes-sneakers.jpg",
-    },
-  ]);
+  const [cart, setCart] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const totalPriceRef = useRef(null);
+
+  useEffect(() => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCart(storedCart);
+  }, []);
+
+  useEffect(() => {
+    const sum = cart.reduce((acc, item) => {
+      const product = products.find((product) => product.id === item.id);
+      return acc + product.price * item.qty;
+    }, 0);
+    setTotalPrice(sum);
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    if (totalPriceRef.current) {
+      totalPriceRef.current.style.display =
+        cart.length > 0 ? "table-row" : "none";
+    }
+  }, [cart, products]);
+
   const handleLogout = () => {
     localStorage.removeItem("email");
     localStorage.removeItem("password");
-    window.location.href = "/login";
+    window.location.href = "/logout";
   };
 
   const handleAddToCart = (id) => {
-    if (cart.find((item) => item.id === id)) {
-      setCart(
-        cart.map((item) =>
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === id);
+      if (existingItem) {
+        return prevCart.map((item) =>
           item.id === id ? { ...item, qty: item.qty + 1 } : item
-        )
-      );
-    } else {
-      setCart([...cart, { id, qty: 1 }]);
-    }
+        );
+      } else {
+        return [...prevCart, { id, qty: 1 }];
+      }
+    });
   };
 
   const email = localStorage.getItem("email");
+
   return (
     <Fragment>
       <div className="flex justify-end h-20 bg-blue-600 text-white items-center px-10">
@@ -92,7 +109,7 @@ const ProductsPage = () => {
                 const product = products.find(
                   (product) => product.id === item.id
                 );
-                if (!product) return null; // Tambahkan pengecekan ini
+                if (!product) return null;
                 return (
                   <tr key={item.id}>
                     <td>{product.name}</td>
@@ -114,12 +131,22 @@ const ProductsPage = () => {
                   </tr>
                 );
               })}
+              <tr ref={totalPriceRef}>
+                <td colSpan={3}>
+                  <b> Total Price</b>
+                </td>
+                <td>
+                  <b>
+                    {totalPrice.toLocaleString("id-ID", {
+                      styles: "currency",
+                      currency: "IDR",
+                    })}
+                  </b>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
-      </div>
-      <div className="flex w-100 justify-center">
-        <Counter></Counter>
       </div>
     </Fragment>
   );
