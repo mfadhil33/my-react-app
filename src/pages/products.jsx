@@ -1,31 +1,13 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import CardProduct from "../components/Fragments/CardProduct";
 import Button from "../components/Elements/Button";
-
-const getProducts = () => [
-  {
-    id: 1,
-    name: "Sepatu Compass",
-    price: 1000,
-    image: "/images/fashion-shoes-sneakers.jpg",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Officia nemo nihilaperiam dolore reiciendis porro dolores quasi error eius, repellendus voluptasoptio laudantium quia quisquam rem sit ipsum eveniet ducimus eligendi?Laudantium qui sapiente laboriosam porro! Cumque ut temporibus aperiamblanditiis ipsam. Accusamus velit nostrum rem illum dolores id odio!",
-  },
-  {
-    id: 2,
-    name: "Sepatu Nike",
-    price: 1000000,
-    image: "/images/fashion-shoes-sneakers.jpg",
-    description: "loremimpsum asdajsdjkjsjdjaskjdwi",
-  },
-];
+import { getProducts } from "../services/product.service";
 
 const ProductsPage = () => {
-  const products = getProducts();
-
   const [cart, setCart] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const totalPriceRef = useRef(null);
+  const [products, setProducts] = useState([]);
+  const totalPriceRef = useRef();
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -33,9 +15,15 @@ const ProductsPage = () => {
   }, []);
 
   useEffect(() => {
+    getProducts((data) => {
+      setProducts(data);
+    });
+  }, []);
+
+  useEffect(() => {
     const sum = cart.reduce((acc, item) => {
       const product = products.find((product) => product.id === item.id);
-      return acc + product.price * item.qty;
+      return acc + (product ? product.price * item.qty : 0);
     }, 0);
     setTotalPrice(sum);
     localStorage.setItem("cart", JSON.stringify(cart));
@@ -78,21 +66,22 @@ const ProductsPage = () => {
 
       <div className="flex justify-center py-4">
         <div className="w-3/4 flex flex-wrap">
-          {products.map((product) => (
-            <CardProduct key={product.id}>
-              <CardProduct.Header image={product.image} />
-              <CardProduct.Body title={product.name}>
-                {product.description}
-              </CardProduct.Body>
-              <CardProduct.Footer
-                price={product.price}
-                id={product.id}
-                addToCart={handleAddToCart}
-              />
-            </CardProduct>
-          ))}
+          {products.length > 0 &&
+            products.map((product) => (
+              <CardProduct key={product.id}>
+                <CardProduct.Header image={product.image} />
+                <CardProduct.Body title={product.title}>
+                  {product.description}
+                </CardProduct.Body>
+                <CardProduct.Footer
+                  price={product.price}
+                  id={product.id}
+                  addToCart={handleAddToCart}
+                />
+              </CardProduct>
+            ))}
         </div>
-        <div className="2-1/4">
+        <div className="w-1/4">
           <h1 className="text-3xl font-bold text-blue-600 ml-5 mb-2">Cart</h1>
 
           <table className="text-left table-auto border-separate border-spacing-x-5">
@@ -105,41 +94,43 @@ const ProductsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {cart.map((item) => {
-                const product = products.find(
-                  (product) => product.id === item.id
-                );
-                if (!product) return null;
-                return (
-                  <tr key={item.id}>
-                    <td>{product.name}</td>
-                    <td>
-                      Rp{" "}
-                      {product.price.toLocaleString("id-ID", {
-                        styles: "currency",
-                        currency: "IDR",
-                      })}
-                    </td>
-                    <td>{item.qty}</td>
-                    <td>
-                      Rp{" "}
-                      {(item.qty * product.price).toLocaleString("id-ID", {
-                        styles: "currency",
-                        currency: "IDR",
-                      })}
-                    </td>
-                  </tr>
-                );
-              })}
+              {products.length > 0 &&
+                cart.map((item) => {
+                  const product = products.find(
+                    (product) => product.id === item.id
+                  );
+                  if (!product) return null;
+                  return (
+                    <tr key={item.id}>
+                      <td>{product.title}</td>
+                      <td>
+                        $
+                        {product.price.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        })}
+                      </td>
+                      <td>{item.qty}</td>
+                      <td>
+                        $
+                        {(item.qty * product.price).toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
               <tr ref={totalPriceRef}>
                 <td colSpan={3}>
-                  <b> Total Price</b>
+                  <b>Total Price</b>
                 </td>
                 <td>
                   <b>
-                    {totalPrice.toLocaleString("id-ID", {
-                      styles: "currency",
-                      currency: "IDR",
+                    {" "}
+                    {totalPrice.toLocaleString("en-US", {
+                      style: "currency",
+                      currency: "USD",
                     })}
                   </b>
                 </td>
